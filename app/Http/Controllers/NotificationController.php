@@ -24,4 +24,19 @@ class NotificationController extends Controller
 
         return view('notifications.index', compact('notifications'));
     }
+
+    /**
+     * Remove the specified notification from storage.
+     */
+    public function destroy(Notification $notification)
+    {
+        // Ensure the user owns the notification
+        if ($notification->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $notification->delete();
+
+        return back()->with('success', 'Notification deleted.');
+    }
 }

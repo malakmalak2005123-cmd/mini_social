@@ -10,15 +10,14 @@ use App\Http\Controllers\ProfileController;
 
 
 // Home page (welcome)
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+Route::get('/',[PostController::class, 'index' ]);
 
 // Posts CRUD + search
 Route::get('/posts/search', [PostController::class, 'search'])
      ->name('posts.search')
      ->middleware('auth');
 Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index')->middleware('auth');
+Route::delete('/notifications/{notification}', [App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy')->middleware('auth');
 Route::resource('posts', PostController::class);
 
 // Comments CRUD (store, destroy)
