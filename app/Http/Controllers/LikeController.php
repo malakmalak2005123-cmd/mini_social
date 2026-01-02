@@ -2,74 +2,55 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Like;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LikeController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
+     * Toggle like for a post.
      */
     public function store(Request $request)
     {
-        $like = Like::where('user_id', auth()->id())
-                     ->where('post_id', $request->post_id)
-                     ->first();
-          
-          if($like){
-            $like->delete();
-          }else{
-            like::create([
-                'user_id'->auth()->id(),
-                'post_id'->$request()->post_id,
+        $request->validate([
+            'post_id' => 'required|exists:posts,id',
+        ]);
+
+        $existingLike = Like::where('user_id', auth()->id())
+                            ->where('post_id', $request->post_id)
+                            ->first();
+
+        if ($existingLike) {
+            $existingLike->delete();
+        } else {
+            Like::create([
+                'user_id' => auth()->id(),
+                'post_id' => $request->post_id,
             ]);
-          }
-          return back();
-}
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+            // Notify Post Owner
+            $post = \App\Models\Post::find($request->post_id);
+            if ($post->user_id !== auth()->id()) {
+                \App\Models\Notification::create([
+                    'user_id' => $post->user_id,
+                    'actor_id' => auth()->id(),
+                    'type' => 'like',
+                    'data' => [
+                        'post_id' => $post->id,
+                        'message' => auth()->user()->name . ' liked your post.'
+                    ],
+                ]);
+            }
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        if ($request->wantsJson()) {
+            return response()->json([
+                'liked' => !$existingLike, // If it was existing and we deleted it, current state is unliked (false)
+                'count' => \App\Models\Post::find($request->post_id)->likes()->count(),
+            ]);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return back();
     }
 }

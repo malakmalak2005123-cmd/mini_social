@@ -21,7 +21,20 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_photo_path',
     ];
+
+    /**
+     * Get the URL to the user's profile photo.
+     *
+     * @return string
+     */
+    public function getProfilePhotoUrlAttribute()
+    {
+        return $this->profile_photo_path
+                    ? asset('storage/' . $this->profile_photo_path)
+                    : 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&color=7F9CF5&background=EBF4FF';
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -53,5 +66,8 @@ class User extends Authenticatable
     }
     public function likes(){
         return $this->hasMany(Like::class);
+    }
+    public function savedPosts(){
+        return $this->belongsToMany(Post::class, 'saved_posts', 'user_id', 'post_id')->withTimestamps();
     }
 }

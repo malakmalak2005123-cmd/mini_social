@@ -1,52 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h2>All Posts</h2>
-<a href="{{ route('posts.create') }}">Create New Post</a>
+<x-app-layout>
+    <x-slot name="header">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
+            {{ __('Home') }}
+        </h2>
+    </x-slot>
 
-@foreach($posts as $post)
-    <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-        <p>{{ $post->content }}</p>
-        <small>By: {{ $post->user->name }}</small>
-        <br>
-        Likes: {{ $post->likes->count() }}
-        <form action="{{ route('likes.store') }}" method="POST">
-            @csrf
-            <input type="hidden" name="post_id" value="{{ $post->id }}">
-            <button type="submit">
-                @if($post->likes->contains('user_id', auth()->id()))
-                    Unlike
-                @else
-                    Like
-                @endif
-            </button>
-        </form>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            
+            <!-- Search Section -->
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-none border border-gray-200 dark:border-gray-700 rounded-lg p-6 mb-6">
+                <form action="{{ route('posts.search') }}" method="GET" class="flex gap-2">
+                    <input type="text" name="query" value="{{ request('query') }}" placeholder="Search posts..." class="w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">Search</button>
+                </form>
+            </div>
 
-        <h4>Comments:</h4>
-        @foreach($post->comments as $comment)
-            <p>{{ $comment->user->name }}: {{ $comment->content }}</p>
-        @endforeach
-
-        <form action="{{ route('comments.store') }}" method="POST">
-            @csrf
-            <input type="hidden" name="post_id" value="{{ $post->id }}">
-            <input type="text" name="content" placeholder="Add a comment">
-            <button type="submit">Comment</button>
-        </form>
-
-        <a href="{{ route('posts.edit', $post->id) }}">Edit</a>
-        <form action="{{ route('posts.destroy', $post->id) }}" method="POST" style="display:inline;">
-            @csrf
-            @method('DELETE')
-            <button type="submit">Delete</button>
-        </form>
+            <!-- Posts Feed -->
+            @foreach($posts as $post)
+                <x-post-card :post="$post" />
+            @endforeach
+        </div>
     </div>
-@endforeach
-
-</body>
-</html>
+</x-app-layout>
